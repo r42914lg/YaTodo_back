@@ -1,11 +1,12 @@
 package com.r42914lg.arkados.yatodo.restservice;
 
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -20,24 +21,25 @@ import com.google.firebase.auth.AuthErrorCode;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
-import com.r42914lg.arkados.yatodo.repository.DbRepo;
 import com.r42914lg.arkados.yatodo.repository.IRepo;
+import com.r42914lg.arkados.yatodo.repository.InMemoryRepo;
 import com.r42914lg.arkados.yatodo.repository.RepoFactory;
 
 @RestController
 public class Controller {
 
 	private static final String FIREBASE_JSON_PATH =
-		"d:/DEV/Spring/YaTodo-Firebase-JSON/yatodo-d6c8e-firebase-adminsdk-ewns2-c21cab5146.json"; 
+		"/yatodo-d6c8e-firebase-adminsdk-ewns2-c21cab5146.json"; 
 
 	@Autowired
 	RepoFactory factory;
 
 	public Controller() {
 		try {
-
-			FileInputStream serviceAccount = 
-				new FileInputStream(FIREBASE_JSON_PATH);
+			ClassPathResource resource = new ClassPathResource(FIREBASE_JSON_PATH);
+			
+			//FileInputStream serviceAccount = new FileInputStream(FIREBASE_JSON_PATH);
+			InputStream serviceAccount = resource.getInputStream();
 
 			FirebaseOptions options = FirebaseOptions.builder()
 				.setCredentials(GoogleCredentials.fromStream(serviceAccount))
@@ -50,10 +52,22 @@ public class Controller {
 		}
 	}
 
+	@PatchMapping("/items_")
+	public ResponseEntity<List<TodoItem>> updateTodoItems_(
+		@RequestHeader (name="Authorization") String idToken,
+		@RequestBody TodoContainer todoContainer) {
+		
+		IRepo repository = factory.getRepo(InMemoryRepo.class);
+		List<TodoItem> toReturn = repository.getTodoItems("lenik_test");
+		printListItems(toReturn, "To return list from repository");
+
+		return ResponseEntity.ok(toReturn);
+	}
+
 	@PatchMapping("/items")
 	public ResponseEntity<List<TodoItem>> updateTodoItems(
 		@RequestHeader (name="Authorization") String idToken,
-		@RequestBody List<TodoItem> listFromFront) {
+		@RequestBody TodoContainer todoContainer) {
 
 		FirebaseToken decodedToken = null;
 
@@ -67,9 +81,13 @@ public class Controller {
 			}
 		}
 
+		List<TodoItem> listFromFront = todoContainer.getItems();
 		printListItems(listFromFront, "List from front");
+
+		String deviceId = todoContainer.getDeviceId();
+		System.out.println("\n\nDevice id: " + deviceId + "\n\n");
 		
-		IRepo repository = factory.getRepo(DbRepo.class);
+		IRepo repository = factory.getRepo(InMemoryRepo.class);
 		
 		String userid = decodedToken.getUid();
 		List<TodoItem> listFromBack = repository.getTodoItems(userid);
@@ -79,7 +97,7 @@ public class Controller {
 		printListItems(mergedList, "Megred list");
 
 		repository.clearUserItems(userid);
-		repository.addTodoItems(mergedList, userid);
+		repository.addTodoItems(mergedList, userid, deviceId);
 
 		List<TodoItem> toReturn = repository.getTodoItems(userid);
 		printListItems(toReturn, "To return list from repository");

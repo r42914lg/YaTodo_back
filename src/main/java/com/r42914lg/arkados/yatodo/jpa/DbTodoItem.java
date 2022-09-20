@@ -10,6 +10,9 @@ public class DbTodoItem {
     private String userid;
     @Id
     private int localid;
+    @Id
+    private String deviceid;
+    
     private String text;
     private int importance;
     private boolean done;
@@ -27,7 +30,8 @@ public class DbTodoItem {
         boolean done,
         long created,
         String deadline,
-        long changed
+        long changed,
+        String deviceid
     ) {
         this.userid = userid;
         this.localid = localid;
@@ -37,6 +41,7 @@ public class DbTodoItem {
         this.created = created;
         this.deadline = deadline;
         this.changed = changed;
+        this.deviceid = deviceid;
     }
 
     public int getLocalid() { return localid; }
@@ -47,6 +52,7 @@ public class DbTodoItem {
     public String getDeadline() { return deadline; }
     public long getChanged() { return changed; }
     public String getUserid() { return userid; }
+    public String getDeviceid() { return deviceid; }
 
     public void setLocalid(int localid) { this.localid = localid; }
     public void setText(String text) { this.text = text; }
@@ -56,4 +62,5 @@ public class DbTodoItem {
     public void setDeadline(String deadline) { this.deadline = deadline; }
     public void setChanged(long changed) { this.changed = changed; }
     public void setUserid(String userid) { this.userid = userid; }
+    public void setDeviceid(String deviceid) { this.deviceid = deviceid; }
 }

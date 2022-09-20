@@ -38,7 +38,7 @@ public class DbRepo implements IRepo {
     }
 
     @Override
-    public void addTodoItems(List<TodoItem> items, String userid) {
+    public void addTodoItems(List<TodoItem> items, String userid, String deviceid) {
         List<DbTodoItem> domainList = items.stream()
         .map(item -> new DbTodoItem(
             userid,
@@ -48,7 +48,8 @@ public class DbRepo implements IRepo {
             item.getDone(), 
             item.getCreated(), 
             item.getDeadline(), 
-            item.getChanged()))
+            item.getChanged(),
+            deviceid))
         .collect(Collectors.toList());
 
         todoItemRepoJPA.saveAll(domainList);
